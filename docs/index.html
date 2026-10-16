@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DOSE: Dominance-Guided Ordinal Severity Estimation from Sparse Relative Annotations</title>
+  <meta name="description" content="DOSE learns ordinal medical severity grading from sparse pairwise comparisons only, without absolute grade labels. WACV 2027.">
+  <meta property="og:title" content="DOSE: Dominance-Guided Ordinal Severity Estimation from Sparse Relative Annotations">
+  <meta property="og:description" content="Ordinal medical severity grading from sparse pairwise comparisons only. WACV 2027.">
+  <meta property="og:image" content="static/images/architecture.png">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="static/css/style.css?v=3">
+</head>
+<body>
+
+<header class="hero">
+  <div class="container">
+    <h1>DOSE: Dominance-Guided Ordinal Severity Estimation from Sparse Relative Annotations</h1>
+    <div class="authors">
+      <span>Tushir Sahu<sup>1</sup></span>
+      <span>Hideaki Hayashi<sup>1</sup></span>
+      <span>Hajime Nagahara<sup>1</sup></span>
+    </div>
+    <div class="affils"><sup>1</sup>The University of Osaka</div>
+    <div class="venue">WACV 2027</div>
+    <div class="buttons">
+      <a class="btn" href="https://github.com/TushirSahu/DOSE-Dominance-Guided-Ordinal-Severity-Estimation-from-Sparse-Relative-Annotations"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Code</a>
+      <a class="btn" href="#bibtex"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 6C4.9 7.3 3.5 9.6 3.5 12.6V18H9.4v-5.6H6.6c0-1.9.9-3.3 2.6-4.3L7.2 6zm9.6 0c-2.3 1.3-3.7 3.6-3.7 6.6V18H19v-5.6h-2.8c0-1.9.9-3.3 2.6-4.3L16.8 6z"/></svg>BibTeX</a>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="abstract" class="band">
+  <div class="container">
+    <h2>Abstract</h2>
+    <p class="lead">Medical severity estimation commonly relies on absolute grade annotations, which are fundamentally ordinal, yet most existing methods often treat the grades as independent categories. Learning-to-rank methods, which can be trained using relative annotations based on severity comparisons of image pairs, can provide continuous severity rankings but cannot directly predict discrete severity grades. We propose <b>D</b>ominance-guided <b>O</b>rdinal <b>S</b>everity <b>E</b>stimation from Sparse Relative Annotations (DOSE), a framework for learning ordinal medical severity from sparse pairwise comparisons without using absolute annotations. DOSE aggregates the observed comparisons through a global comparison graph to estimate a dominance score for each image. Differences between dominance scores set cumulative margins in the embedding space, so that pairs with larger estimated severity differences are separated more strongly, and also generate pseudo-pairs that supervise a scalar severity head alongside the observed comparisons. The learned continuous severity axis is converted into discrete grades via label-free score calibration, with tie-anchored segmentation as the main calibration method. In the experiment, DOSE consistently outperformed pairwise-ranking baselines on ACNE04, IDRiD, and LIMUC under different pair budgets.</p>
+  </div>
+</section>
+
+<section id="method">
+  <div class="container">
+    <h2>Method</h2>
+    <figure>
+      <img src="static/images/architecture.png" alt="Overview of DOSE" loading="lazy">
+    </figure>
+    <p class="caption">Sparse pairwise annotations are aggregated into a global dominance score for every image,
+      whose gaps give label-free ordinal distances. These distances set the cumulative margins of
+      L<sub>RMM</sub> on the embedding <i>z</i>, while the severity head &alpha;<sub>&psi;</sub>(<i>z</i>) is trained
+      with L<sub>rank</sub> and dominance pseudo-pairs L<sub>pp</sub>. At inference, label-free calibration
+      (Tie-seg) turns the severity score into discrete grades.</p>
+
+    <figure class="sub">
+      <img src="static/images/dominance.png" alt="Dominance Estimation Module" loading="lazy">
+    </figure>
+
+    <figure class="sub narrow">
+      <img src="static/images/calibration.png" alt="Score-to-grade calibration routes" loading="lazy">
+    </figure>
+  </div>
+</section>
+
+<section id="results">
+  <div class="container">
+    <h2>Results</h2>
+
+    <h3>Comparison with pairwise-ranking baselines and full supervision</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th class="left" rowspan="2">Method</th><th class="left" rowspan="2">Supervision</th><th rowspan="2">Budget</th>
+              <th colspan="2">ACNE04 (K=4)</th><th colspan="2">IDRiD (K=5)</th><th colspan="2">LIMUC (K=4)</th></tr>
+          <tr><th>Acc &uarr;</th><th>QWK &uarr;</th><th>Acc &uarr;</th><th>QWK &uarr;</th><th>Acc &uarr;</th><th>QWK &uarr;</th></tr>
+        </thead>
+        <tbody>
+          <tr class="ref"><td class="rowhead">Cross-entropy</td><td class="left">absolute grades</td><td>100%</td><td>78.6<span class="pm">±0.8</span></td><td>0.822<span class="pm">±0.013</span></td><td>86.6<span class="pm">±0.4</span></td><td>0.914<span class="pm">±0.008</span></td><td>78.0<span class="pm">±0.6</span></td><td>0.848<span class="pm">±0.011</span></td></tr>
+<tr class="group-start"><td class="rowhead" rowspan="5">MarginRank</td><td class="left" rowspan="5">relative pairs</td><td>5%</td><td>68.6<span class="pm">±1.5</span></td><td>0.743<span class="pm">±0.009</span></td><td>73.6<span class="pm">±7.8</span></td><td>0.812<span class="pm">±0.107</span></td><td>55.7<span class="pm">±0.2</span></td><td>0.252<span class="pm">±0.020</span></td></tr>
+<tr class=""><td>10%</td><td>69.5<span class="pm">±3.4</span></td><td>0.755<span class="pm">±0.043</span></td><td><b>80.5<span class="pm">±1.1</span></b></td><td>0.882<span class="pm">±0.008</span></td><td>70.3<span class="pm">±1.1</span></td><td>0.671<span class="pm">±0.046</span></td></tr>
+<tr class=""><td>30%</td><td>71.2<span class="pm">±0.3</span></td><td>0.788<span class="pm">±0.009</span></td><td>81.2<span class="pm">±0.5</span></td><td>0.878<span class="pm">±0.002</span></td><td>73.9<span class="pm">±0.8</span></td><td>0.844<span class="pm">±0.008</span></td></tr>
+<tr class=""><td>50%</td><td>72.6<span class="pm">±2.4</span></td><td>0.799<span class="pm">±0.020</span></td><td>81.1<span class="pm">±0.1</span></td><td>0.878<span class="pm">±0.004</span></td><td>74.0<span class="pm">±0.6</span></td><td>0.847<span class="pm">±0.005</span></td></tr>
+<tr class=""><td>70%</td><td>73.1<span class="pm">±1.5</span></td><td>0.786<span class="pm">±0.023</span></td><td>81.9<span class="pm">±1.5</span></td><td>0.890<span class="pm">±0.009</span></td><td>76.1<span class="pm">±0.4</span></td><td>0.839<span class="pm">±0.004</span></td></tr>
+<tr class="group-start"><td class="rowhead" rowspan="5">RankNet</td><td class="left" rowspan="5">relative pairs</td><td>5%</td><td>68.1<span class="pm">±1.2</span></td><td>0.514<span class="pm">±0.009</span></td><td>72.1<span class="pm">±9.1</span></td><td><b>0.841<span class="pm">±0.004</span></b></td><td><b>69.4<span class="pm">±0.8</span></b></td><td><b>0.599<span class="pm">±0.005</span></b></td></tr>
+<tr class=""><td>10%</td><td>66.7<span class="pm">±0.9</span></td><td>0.487<span class="pm">±0.011</span></td><td>72.3<span class="pm">±8.6</span></td><td>0.841<span class="pm">±0.006</span></td><td>71.0<span class="pm">±2.9</span></td><td>0.674<span class="pm">±0.105</span></td></tr>
+<tr class=""><td>30%</td><td>65.5<span class="pm">±1.7</span></td><td>0.472<span class="pm">±0.022</span></td><td>60.4<span class="pm">±0.6</span></td><td>0.861<span class="pm">±0.004</span></td><td>74.4<span class="pm">±0.4</span></td><td>0.819<span class="pm">±0.003</span></td></tr>
+<tr class=""><td>50%</td><td>66.0<span class="pm">±0.9</span></td><td>0.487<span class="pm">±0.013</span></td><td>61.0<span class="pm">±0.5</span></td><td>0.864<span class="pm">±0.002</span></td><td>74.4<span class="pm">±0.8</span></td><td>0.819<span class="pm">±0.005</span></td></tr>
+<tr class=""><td>70%</td><td>66.2<span class="pm">±2.2</span></td><td>0.488<span class="pm">±0.029</span></td><td>59.8<span class="pm">±0.0</span></td><td>0.861<span class="pm">±0.001</span></td><td>74.1<span class="pm">±0.6</span></td><td>0.819<span class="pm">±0.004</span></td></tr>
+<tr class="ours group-start"><td class="rowhead" rowspan="5">DOSE (ours)</td><td class="left" rowspan="5">relative pairs</td><td>5%</td><td><b>69.3<span class="pm">±1.0</span></b></td><td><b>0.755<span class="pm">±0.009</span></b></td><td><b>78.4<span class="pm">±0.4</span></b></td><td>0.839<span class="pm">±0.003</span></td><td>56.4<span class="pm">±0.3</span></td><td>0.498<span class="pm">±0.141</span></td></tr>
+<tr class="ours"><td>10%</td><td><b>70.2<span class="pm">±0.9</span></b></td><td><b>0.762<span class="pm">±0.009</span></b></td><td>79.6<span class="pm">±0.8</span></td><td><b>0.900<span class="pm">±0.006</span></b></td><td><b>75.2<span class="pm">±0.8</span></b></td><td><b>0.821<span class="pm">±0.008</span></b></td></tr>
+<tr class="ours"><td>30%</td><td><b>72.6<span class="pm">±1.2</span></b></td><td><b>0.807<span class="pm">±0.011</span></b></td><td><b>84.5<span class="pm">±0.7</span></b></td><td><b>0.909<span class="pm">±0.010</span></b></td><td><b>77.5<span class="pm">±0.4</span></b></td><td><b>0.857<span class="pm">±0.003</span></b></td></tr>
+<tr class="ours"><td>50%</td><td><b>74.8<span class="pm">±0.3</span></b></td><td><b>0.821<span class="pm">±0.001</span></b></td><td><b>84.0<span class="pm">±0.4</span></b></td><td><b>0.903<span class="pm">±0.003</span></b></td><td><b>78.0<span class="pm">±0.6</span></b></td><td><b>0.862<span class="pm">±0.004</span></b></td></tr>
+<tr class="ours"><td>70%</td><td><b>74.1<span class="pm">±2.0</span></b></td><td><b>0.807<span class="pm">±0.021</span></b></td><td><b>84.0<span class="pm">±0.4</span></b></td><td><b>0.910<span class="pm">±0.008</span></b></td><td><b>78.1<span class="pm">±0.4</span></b></td><td><b>0.859<span class="pm">±0.004</span></b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Bold: best relative-supervision result.</p>
+
+    <h3>Calibration routes</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th class="left" rowspan="2">Dataset</th><th rowspan="2">Budget</th><th colspan="3">Label-free</th><th>Oracle</th></tr>
+          <tr><th>Tie-seg</th><th>GMM</th><th>Est-prior</th><th>Known-prior</th></tr>
+        </thead>
+        <tbody>
+          <tr class="group-start"><td class="rowhead" rowspan="3">ACNE04</td><td>30%</td><td>72.6<span class="pm">±1.2</span></td><td><b>73.6<span class="pm">±1.2</span></b></td><td><b>73.6<span class="pm">±0.0</span></b></td><td class="oracle">73.3<span class="pm">±0.9</span></td></tr>
+<tr class=""><td>50%</td><td>74.8<span class="pm">±0.3</span></td><td>75.0<span class="pm">±1.0</span></td><td><b>75.7<span class="pm">±0.6</span></b></td><td class="oracle">75.5<span class="pm">±0.9</span></td></tr>
+<tr class=""><td>70%</td><td>74.1<span class="pm">±2.0</span></td><td><b>75.1<span class="pm">±0.8</span></b></td><td>74.4<span class="pm">±0.8</span></td><td class="oracle">74.9<span class="pm">±1.3</span></td></tr>
+<tr class="group-start"><td class="rowhead" rowspan="3">IDRiD</td><td>30%</td><td><b>84.5<span class="pm">±0.7</span></b></td><td>84.2<span class="pm">±0.5</span></td><td>84.3<span class="pm">±1.1</span></td><td class="oracle">84.7<span class="pm">±0.3</span></td></tr>
+<tr class=""><td>50%</td><td><b>84.0<span class="pm">±0.4</span></b></td><td>83.6<span class="pm">±1.0</span></td><td>83.9<span class="pm">±0.7</span></td><td class="oracle">84.7<span class="pm">±0.8</span></td></tr>
+<tr class=""><td>70%</td><td><b>84.0<span class="pm">±0.4</span></b></td><td>83.8<span class="pm">±0.7</span></td><td>83.1<span class="pm">±0.7</span></td><td class="oracle">84.8<span class="pm">±0.5</span></td></tr>
+<tr class="group-start"><td class="rowhead" rowspan="3">LIMUC</td><td>30%</td><td>77.5<span class="pm">±0.4</span></td><td><b>77.6<span class="pm">±0.3</span></b></td><td>76.2<span class="pm">±0.6</span></td><td class="oracle">77.6<span class="pm">±0.5</span></td></tr>
+<tr class=""><td>50%</td><td><b>78.0<span class="pm">±0.6</span></b></td><td><b>78.0<span class="pm">±0.6</span></b></td><td>76.6<span class="pm">±0.3</span></td><td class="oracle">78.1<span class="pm">±0.6</span></td></tr>
+<tr class=""><td>70%</td><td>78.1<span class="pm">±0.4</span></td><td><b>78.2<span class="pm">±0.1</span></b></td><td>77.3<span class="pm">±0.6</span></td><td class="oracle">78.4<span class="pm">±0.2</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Accuracy (%). Bold: best label-free route.</p>
+
+    <h3>Margin ablation</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th class="left" rowspan="3">Dataset</th><th rowspan="3">Budget</th><th colspan="4">Tie-seg</th><th colspan="2">Known-prior</th></tr>
+          <tr><th colspan="2">Acc &uarr;</th><th colspan="2">QWK &uarr;</th><th colspan="2">Acc &uarr;</th></tr>
+          <tr><th>Multi</th><th>Single</th><th>Multi</th><th>Single</th><th>Multi</th><th>Single</th></tr>
+        </thead>
+        <tbody>
+          <tr class="group-start"><td class="rowhead" rowspan="3">ACNE04</td><td>30%</td><td><b>72.6<span class="pm">±1.2</span></b></td><td>69.4<span class="pm">±2.6</span></td><td><b>0.807</b></td><td>0.768</td><td><b>73.3<span class="pm">±0.9</span></b></td><td>70.3<span class="pm">±1.7</span></td></tr>
+<tr class=""><td>50%</td><td><b>74.8<span class="pm">±0.3</span></b></td><td>71.3<span class="pm">±2.5</span></td><td><b>0.821</b></td><td>0.785</td><td><b>75.5<span class="pm">±0.9</span></b></td><td>71.1<span class="pm">±1.5</span></td></tr>
+<tr class=""><td>70%</td><td><b>74.1<span class="pm">±2.0</span></b></td><td>71.6<span class="pm">±1.2</span></td><td><b>0.807</b></td><td>0.786</td><td><b>74.9<span class="pm">±1.3</span></b></td><td>71.1<span class="pm">±1.7</span></td></tr>
+<tr class="group-start"><td class="rowhead" rowspan="3">IDRiD</td><td>30%</td><td><b>84.5<span class="pm">±0.7</span></b></td><td>82.8<span class="pm">±1.3</span></td><td><b>0.909</b></td><td>0.897</td><td><b>84.7<span class="pm">±0.3</span></b></td><td>82.6<span class="pm">±0.8</span></td></tr>
+<tr class=""><td>50%</td><td><b>84.0<span class="pm">±0.4</span></b></td><td>83.7<span class="pm">±1.0</span></td><td><b>0.903</b></td><td>0.902</td><td><b>84.7<span class="pm">±0.8</span></b></td><td>82.5<span class="pm">±1.5</span></td></tr>
+<tr class=""><td>70%</td><td>84.0<span class="pm">±0.4</span></td><td><b>84.3<span class="pm">±1.0</span></b></td><td><b>0.910</b></td><td>0.906</td><td><b>84.8<span class="pm">±0.5</span></b></td><td>83.1<span class="pm">±1.0</span></td></tr>
+<tr class="group-start"><td class="rowhead" rowspan="3">LIMUC</td><td>30%</td><td><b>77.5<span class="pm">±0.4</span></b></td><td>76.9<span class="pm">±0.3</span></td><td><b>0.857</b></td><td>0.840</td><td><b>77.6<span class="pm">±0.5</span></b></td><td>77.1<span class="pm">±0.4</span></td></tr>
+<tr class=""><td>50%</td><td><b>78.0<span class="pm">±0.6</span></b></td><td>75.7<span class="pm">±0.1</span></td><td><b>0.862</b></td><td>0.826</td><td><b>78.1<span class="pm">±0.6</span></b></td><td>76.0<span class="pm">±0.0</span></td></tr>
+<tr class=""><td>70%</td><td><b>78.1<span class="pm">±0.4</span></b></td><td>76.5<span class="pm">±0.7</span></td><td><b>0.859</b></td><td>0.835</td><td><b>78.4<span class="pm">±0.2</span></b></td><td>77.1<span class="pm">±0.4</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+      </div>
+</section>
+
+<section id="bibtex">
+  <div class="container">
+    <h2>BibTeX</h2>
+    <div class="bib">
+      <button class="copy" type="button" onclick="copyBib(this)">Copy</button>
+      <pre><code id="bibcode">@inproceedings{sahu2027dose,
+  title     = {{DOSE}: Dominance-Guided Ordinal Severity Estimation from Sparse Relative Annotations},
+  author    = {Sahu, Tushir and Hayashi, Hideaki and Nagahara, Hajime},
+  booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  year      = {2027}
+}</code></pre>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="container">
+    <p>Code released under the MIT License &middot; <a href="https://github.com/TushirSahu/DOSE-Dominance-Guided-Ordinal-Severity-Estimation-from-Sparse-Relative-Annotations">GitHub</a></p>
+  </div>
+</footer>
+
+<script>
+  function copyBib(btn) {
+    const text = document.getElementById("bibcode").innerText;
+    const done = () => { btn.textContent = "Copied"; setTimeout(() => btn.textContent = "Copy", 1500); };
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done).catch(() => {}); }
+  }
+</script>
+</body>
+</html>
