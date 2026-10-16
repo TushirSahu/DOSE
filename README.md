@@ -2,7 +2,7 @@
 
 # DOSE: Dominance-Guided Ordinal Severity Estimation from Sparse Relative Annotations
 
-**Tushir Sahu**, *Hideaki Hayashi, Hajime Nagahara*
+**Tushir Sahu**, *[co-authors]*
 
 **WACV 2027**
 
@@ -34,6 +34,25 @@ an absolute grade as a training target.
   confident pseudo-pairs derived from the dominance scores.
 - **Label-free calibration.** Tie-anchored segmentation (Tie-seg) turns the continuous severity axis
   into K grades, using the "comparable" annotations as anchors and no class prior.
+
+## Method
+
+**Dominance estimation.** The sparse comparisons form a graph whose stationary random-walk
+distribution gives each image a dominance score `q`. Gaps `|q_i − q_j|` are bucketed into ordinal
+distance levels that set the cumulative margins of `L_RMM`, and pairs with a confident gap become
+pseudo-pairs for `L_pp`.
+
+<p align="center">
+  <img src="img/dominance.png" width="90%" alt="Dominance Estimation Module">
+</p>
+
+**Score-to-grade calibration.** After training, `K − 1` cut-offs are placed on the severity axis.
+Tie-seg, GMM and Est-prior are label-free; Known-prior uses the true class proportions and is
+reported only as an oracle.
+
+<p align="center">
+  <img src="img/calibration.png" width="60%" alt="Score-to-grade calibration routes">
+</p>
 
 ## Results
 
