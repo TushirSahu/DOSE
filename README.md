@@ -1,1 +1,1 @@
-# -DOSE-Dominance-Guided-Ordinal-Severity-Estimation-from-Sparse-Relative-Annotations
+# DOSE-Dominance-Guided-Ordinal-Severity-Estimation-from-Sparse-Relative-Annotations
