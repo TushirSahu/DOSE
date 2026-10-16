@@ -2,7 +2,7 @@
 
 # DOSE: Dominance-Guided Ordinal Severity Estimation from Sparse Relative Annotations
 
-**Tushir Sahu**, *[co-authors]*
+**Tushir Sahu**, *Hideaki Hayashi, Hajime Nagahara*
 
 **WACV 2027**
 
