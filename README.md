@@ -71,9 +71,16 @@ fully supervised model in QWK despite never seeing an absolute grade.
 ## Installation
 
 ```bash
-git clone https://github.com/TushirSahu/DOSE-Dominance-Guided-Ordinal-Severity-Estimation-from-Sparse-Relative-Annotations.git DOSE
+git clone https://github.com/TushirSahu/DOSE.git
 cd DOSE
-pip install torch torchvision numpy scikit-learn pillow tqdm
+pip install -r requirements.txt
+```
+
+Or use Docker (CUDA 12.8):
+
+```bash
+docker build -t dose .
+docker run --gpus all -v /path/to/data:/data -it dose
 ```
 
 ## Data preparation

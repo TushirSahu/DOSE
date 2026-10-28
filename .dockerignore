@@ -1,0 +1,11 @@
+.git
+docs
+img
+**/__pycache__
+checkpoints
+eval
+baselines/eval
+baselines/ckpt
+baselines/sup
+*.pth
+.DS_Store
