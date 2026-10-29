@@ -102,34 +102,59 @@ class RelativeComparisonDataset(Dataset):
             image = self.transform(image)
         return image, self.img_ids[idx]
 
-    def get_pairs_for_batch(self, batch_ids):
+    def get_pairs_for_batch(self, batch_ids, rounds=0, rng=None):
         """Annotated pairs inside a batch.
 
         batch_ids : global image indices of the batch.
+        rounds    : number of pairwise-encoding rounds. In each round the batch is partitioned
+                    into B/2 disjoint pairs and only the annotated ones are kept, so every image
+                    takes part in at most one comparison per round and at most `rounds`
+                    comparisons overall (O(B) pairs per batch). rounds <= 0 uses every annotated
+                    pair inside the batch.
+        rng       : numpy Generator for the random partitions.
         Returns   : (pairs (P, 2) of local indices, relative labels (P,)) or (None, None).
         """
-        id_to_local = {gid: local for local, gid in enumerate(batch_ids)}
-        batch_set = set(batch_ids)
+        if rounds > 0:
+            candidates = self._disjoint_pair_candidates(len(batch_ids), rounds, rng)
+        else:
+            candidates = self._all_pair_candidates(batch_ids)
+
         pairs, labels, seen = [], [], set()
+        for local_i, local_j in candidates:
+            gid_i, gid_j = batch_ids[local_i], batch_ids[local_j]
+            key = (min(local_i, local_j), max(local_i, local_j))
+            if key in seen or not self._is_annotated(gid_i, gid_j):
+                continue
+            seen.add(key)
 
-        for local_i, gid_i in enumerate(batch_ids):
-            for gid_j in self.pairs_dict.get(gid_i, []):
-                if gid_j not in batch_set:
-                    continue
-                local_j = id_to_local[gid_j]
-                key = (min(local_i, local_j), max(local_i, local_j))
-                if key in seen:
-                    continue
-                seen.add(key)
-
-                rel = self.relative_label(gid_i, gid_j)
-                if local_i < local_j:                  # emit the smaller local index first
-                    pairs.append([local_i, local_j])
-                    labels.append(float(rel))
-                else:
-                    pairs.append([local_j, local_i])
-                    labels.append(float(-rel))
+            rel = self.relative_label(gid_i, gid_j)
+            if local_i < local_j:                  # emit the smaller local index first
+                pairs.append([local_i, local_j])
+                labels.append(float(rel))
+            else:
+                pairs.append([local_j, local_i])
+                labels.append(float(-rel))
 
         if len(pairs) == 0:
             return None, None
         return torch.tensor(pairs, dtype=torch.long), torch.tensor(labels, dtype=torch.float32)
+
+    def _is_annotated(self, gid_i, gid_j):
+        if not hasattr(self, "_neighbours"):
+            self._neighbours = {k: set(v) for k, v in self.pairs_dict.items()}
+        return gid_j in self._neighbours.get(gid_i, ())
+
+    def _all_pair_candidates(self, batch_ids):
+        id_to_local = {gid: local for local, gid in enumerate(batch_ids)}
+        for local_i, gid_i in enumerate(batch_ids):
+            for gid_j in self.pairs_dict.get(gid_i, []):
+                if gid_j in id_to_local:
+                    yield local_i, id_to_local[gid_j]
+
+    @staticmethod
+    def _disjoint_pair_candidates(batch_size, rounds, rng):
+        rng = rng if rng is not None else np.random.default_rng()
+        for _ in range(rounds):
+            perm = rng.permutation(batch_size)
+            for k in range(0, batch_size - 1, 2):
+                yield int(perm[k]), int(perm[k + 1])

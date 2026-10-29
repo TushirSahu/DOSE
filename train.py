@@ -126,10 +126,13 @@ def train_one_epoch(model, loader, optimizer, device, epoch, args, criterion_cli
     q_global = q_global.to(device)
     gap_edges = gap_edges.to(device)
     it = tqdm(loader, desc=f"Epoch {epoch}") if rank == 0 else loader
+    pair_rng = np.random.default_rng(args.seed + 1000 * epoch + rank)   # disjoint pairing rounds
+    margin_params = [p for p in criterion_clip.parameters() if p.requires_grad]
+    sync_margins = bool(margin_params) and dist.is_available() and dist.is_initialized()
 
     for images, img_ids in it:
         images = images.to(device, non_blocking=True)
-        pairs, rel = loader.dataset.get_pairs_for_batch(img_ids)
+        pairs, rel = loader.dataset.get_pairs_for_batch(img_ids, rounds=args.pair_rounds, rng=pair_rng)
         if pairs is None or len(pairs) == 0:
             continue
         pairs = pairs.to(device)
@@ -155,6 +158,14 @@ def train_one_epoch(model, loader, optimizer, device, epoch, args, criterion_cli
         loss = args.lambda_clip * l_clip + args.lambda_rank * l_rank + args.lambda_pp * l_pp
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
+        if sync_margins:
+            # The margins live in the loss, outside DDP, so average their gradients across GPUs
+            # to keep one shared set of margins.
+            world = dist.get_world_size()
+            for p in margin_params:
+                if p.grad is not None:
+                    dist.all_reduce(p.grad)
+                    p.grad /= world
         if args.grad_clip > 0:
             nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
         optimizer.step()
@@ -206,11 +217,16 @@ def run(rank, world_size, args, distributed):
 
     if args.multi_margin:
         criterion_clip = RelativeCLOCLoss_MultiMargin(device, n_rank_levels=args.n_classes,
-                                                      learnable_margin=True)
+                                                      learnable_margin=not args.fixed_margins)
     else:
-        criterion_clip = RelativeCLOCLoss(device, learnable_margin=True)
+        criterion_clip = RelativeCLOCLoss(device, learnable_margin=not args.fixed_margins)
 
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    # Step margins m_t = softplus(theta_t) are learned jointly with the network (no weight decay).
+    param_groups = [{"params": model.parameters()}]
+    margin_params = list(criterion_clip.parameters())
+    if margin_params:
+        param_groups.append({"params": margin_params, "weight_decay": 0.0})
+    optimizer = optim.Adam(param_groups, lr=args.lr, weight_decay=args.weight_decay)
     scheduler = (optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
                  if args.cosine_lr else None)
 
@@ -281,6 +297,11 @@ def parse_args():
     p.add_argument("--seed", type=int, default=1234)
 
     p.add_argument("--multi_margin", action="store_true", default=True)
+    p.add_argument("--fixed_margins", action="store_true",
+                   help="Keep the step margins at their initial values instead of learning them.")
+    p.add_argument("--pair_rounds", type=int, default=8,
+                   help="Pairwise-encoding rounds per batch; each round partitions the batch into "
+                        "disjoint pairs. 0 = use every annotated pair in the batch.")
     p.add_argument("--single_margin", dest="multi_margin", action="store_false",
                    help="Ablation: one shared margin instead of the cumulative multi-margin.")
     return p.parse_args()

@@ -170,6 +170,8 @@ bash baselines/run_supervised.sh     # cross-entropy upper bound (Table 1)
 | `--pp_tau` | 0.1 | minimum dominance gap for a pseudo-pair |
 | `--no_dom_pairs` | off | disable dominance pseudo-pairs |
 | `--single_margin` | off | one shared margin instead of cumulative margins |
+| `--pair_rounds` | 8 | pairwise-encoding rounds per batch (disjoint pairs each round); `0` = all annotated in-batch pairs |
+| `--fixed_margins` | off | keep the step margins at their initial values instead of learning them |
 | `--dominance` | `transitive` | `transitive` (Rank Centrality) or `copeland` |
 | `--aug` | `light` | `light` (paper) or `strong` |
 
